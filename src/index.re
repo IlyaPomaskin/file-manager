@@ -1,0 +1,2 @@
+ReactDOMRe.renderToElementWithId(<App />, "index");
+ 

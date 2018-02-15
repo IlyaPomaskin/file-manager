@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>reasonml-fs</title>
+  <link rel="stylesheet" href="./blaze.min.css">
+  <link rel="stylesheet" href="./blaze.colors.min.css">
+  <style>
+    html,
+    body,
+    #index,
+    .o-container,
+    .content,
+    .o-grid {
+      height: 100%;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    .grid {
+      height: 100%;
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel {
+      flex: 1;
+      height: 100%;
+      width: 100%;
+      overflow-y: hidden;
+      overflow-x: scroll;
+      white-space: nowrap;
+      display: grid;
+
+      border: 1px solid grey;
+
+      grid-auto-flow: column;
+      /* grid-auto-columns: 180px; */
+      grid-auto-columns: minmax(min-content, max-content);
+      grid-template-rows: repeat(auto-fill, 24px);
+    }
+
+    .panel-item {
+      min-width: 120px;
+      padding: 0 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="index"></div>
+  <script src="../build/index.js"></script>
+  <script>
+    let isReloading = false;
+    const fs = require('fs');
+    const watcherJs = fs.watch('./build/index.js', () => {
+      if (isReloading) {
+        return;
+      }
+      isReloading = true;
+      watcherJs.close();
+      window.location.reload();
+    });
+    const watcherHtml = fs.watch('./src/index.html', () => {
+      if (isReloading) {
+        return;
+      }
+      isReloading = true;
+      watcherHtml.close();
+      window.location.reload();
+    });
+  </script>
+</body>
+
+</html>
