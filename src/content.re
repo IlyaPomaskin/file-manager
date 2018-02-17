@@ -9,7 +9,7 @@ type action =
 
 type panelProps = {
   path: string,
-  files: array(Fs_utils.fileInfo)
+  files: list(Fs_utils.fileInfo)
 };
 
 type state = {
@@ -41,7 +41,8 @@ let make = _children => {
         ReactDOMRe.domElementToObj(ReactEventRe.Form.target(event))##value
       )
     );
-  let handlePathChange = (side: panelSides, path, self) => self.ReasonReact.send(SetPath(side, path));
+  let handlePathChange = (side: panelSides, path, self) =>
+    self.ReasonReact.send(SetPath(side, path));
   {
     ...component,
     initialState: () => {

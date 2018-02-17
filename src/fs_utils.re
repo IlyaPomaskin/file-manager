@@ -30,5 +30,5 @@ let getFilesList = path => {
     |> Array.map(filename => mapToFileInfo(path, filename))
     |> Array.append([|{name: "..", fullPath: path, isFile: false}|]);
   Array.fast_sort(sortByTypeAndName, files);
-  files;
+  Array.to_list(files);
 };
