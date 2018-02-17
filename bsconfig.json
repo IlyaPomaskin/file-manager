@@ -18,6 +18,7 @@
     "reason-react",
     "rationale",
     "bs-node",
+    "bs-webapi",
     "re-classnames"
   ],
   "refmt": 3
