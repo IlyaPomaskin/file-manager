@@ -22,10 +22,8 @@ let folderImage = {js|📁|js};
 
 let getItemHeight = () => 24;
 
-let getPanelHeight = () => 363;
-
 let splitByColumns = (~itemHeight: int, ~panelHeight: int, items) => {
-  let itemsInColumn = panelHeight / itemHeight;
+  let itemsInColumn = max(panelHeight / itemHeight, 1);
   Rationale.RList.splitEvery(itemsInColumn, items);
 };
 
@@ -105,17 +103,17 @@ let make = (~path, ~onPathChange, ~files, _children) => {
     updatePanelHeight(self);
     ReasonReact.NoUpdate;
   },
-  willReceiveProps: self => {
+  willReceiveProps: self =>
     if (self.retainedProps.path !== path) {
-      self.send(SetFocus(".."));
-    };
-    self.state;
-  },
+      {...self.state, focused: ".."};
+    } else {
+      self.state;
+    },
   initialState: () => {
     focused: "..",
     itemRef: ref(None),
     panelRef: ref(None),
-    panelHeight: 333
+    panelHeight: 0
   },
   reducer: (action, state) =>
     switch action {
