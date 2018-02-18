@@ -5,9 +5,11 @@ type panelSides =
   | Right;
 
 type action =
-  | SetPath(panelSides, string);
+  | SetPath(panelSides, string)
+  | SetFocus(panelSides);
 
 type panelProps = {
+  isFocused: bool,
   path: string,
   files: list(Fs_utils.fileInfo)
 };
@@ -41,17 +43,6 @@ let getPath = (path, relative) => Node_path.resolve(path, relative);
 
 let getFiles = path => Fs_utils.getFilesList(path);
 
-let handlePathInput = (side: panelSides, event, self) =>
-  self.ReasonReact.send(
-    SetPath(
-      side,
-      ReactDOMRe.domElementToObj(ReactEventRe.Form.target(event))##value
-    )
-  );
-
-let handlePathChange = (side: panelSides, path, self) =>
-  self.ReasonReact.send(SetPath(side, path));
-
 let renderPanel = (side: panelSides, self) => {
   let state =
     switch side {
@@ -62,13 +53,23 @@ let renderPanel = (side: panelSides, self) => {
     <input
       className="path"
       value=state.path
-      onChange=(self.handle(handlePathInput(side)))
+      onChange=(
+        event =>
+          self.ReasonReact.send(
+            SetPath(
+              side,
+              ReactDOMRe.domElementToObj(ReactEventRe.Form.target(event))##value
+            )
+          )
+      )
       tabIndex=(-1)
     />
     <Panel
+      isFocused=state.isFocused
       path=state.path
       files=state.files
-      onPathChange=(self.handle(handlePathChange(side)))
+      onPathChange=(path => self.ReasonReact.send(SetPath(side, path)))
+      onClick=(_e => self.send(SetFocus(side)))
     />
   </div>;
 };
@@ -77,10 +78,12 @@ let make = _children => {
   ...component,
   initialState: () => {
     left: {
+      isFocused: true,
       path: "/Users/i.pomaskin",
       files: getFiles("/Users/i.pomaskin")
     },
     right: {
+      isFocused: false,
       path: "/Users/i.pomaskin",
       files: getFiles("/Users/i.pomaskin")
     }
@@ -98,6 +101,12 @@ let make = _children => {
           },
           state
         )
+      )
+    | SetFocus(side) =>
+      ReasonReact.Update(
+        state
+        |> Lens.over(leftLens, panel => {...panel, isFocused: side === Left})
+        |> Lens.over(rightLens, panel => {...panel, isFocused: side === Right})
       )
     },
   render: self =>

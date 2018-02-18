@@ -75,7 +75,7 @@ let resizeEventListener = (_evt, self) => updatePanelHeight(self);
 let setPanelRef = (node, self) =>
   self.ReasonReact.state.panelRef := Js.Nullable.to_opt(node);
 
-let make = (~path, ~onPathChange, ~files, _children) => {
+let make = (~isFocused, ~onPathChange, ~onClick, ~path, ~files, _children) => {
   ...component,
   retainedProps: {
     path,
@@ -122,7 +122,10 @@ let make = (~path, ~onPathChange, ~files, _children) => {
       ReasonReact.Update({...state, panelHeight: height})
     },
   render: self =>
-    <div className="panel" ref=(self.handle(setPanelRef))>
+    <div
+      className=("panel " ++ (isFocused ? "panel--focused" : ""))
+      ref=(self.handle(setPanelRef))
+      onClick>
       (
         files
         |> splitByColumns(
