@@ -7,7 +7,7 @@ type fileInfo = {
 let getDirPath = (oldPath, newPart) =>
   Node_path.normalize(oldPath ++ Node_path.sep ++ newPart);
 
-let mapToFileInfo = (path, name) : fileInfo => {
+let makeFileInfo = (path, name) : fileInfo => {
   let fullPath = Node_path.resolve(path, name);
   let stats = NodeFsLocal.statSync(fullPath);
   {name, fullPath, isFile: NodeFsLocal.Stats.isFile(stats)};
@@ -27,7 +27,7 @@ let sortByTypeAndName = (a: fileInfo, b: fileInfo) =>
 let getFilesList = path => {
   let files: array(fileInfo) =
     Node_fs.readdirSync(path)
-    |> Array.map(filename => mapToFileInfo(path, filename))
+    |> Array.map(filename => makeFileInfo(path, filename))
     |> Array.append([|{name: "..", fullPath: path, isFile: false}|]);
   Array.fast_sort(sortByTypeAndName, files);
   Array.to_list(files);

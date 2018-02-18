@@ -1,15 +1,19 @@
 open Rationale;
 
+open Fs_utils;
+
 type panelSides =
   | Left
   | Right;
 
 type action =
-  | SetPath(panelSides, string)
-  | SetFocus(panelSides);
+  | SetPath(panelSides, fileInfo)
+  | SetPanelFocus(panelSides)
+  | SetItemFocus(panelSides, fileInfo);
 
 type panelProps = {
   isFocused: bool,
+  focusedItem: fileInfo,
   path: string,
   files: list(Fs_utils.fileInfo)
 };
@@ -68,8 +72,10 @@ let renderPanel = (side: panelSides, self) => {
       isFocused=state.isFocused
       path=state.path
       files=state.files
-      onPathChange=(path => self.ReasonReact.send(SetPath(side, path)))
-      onClick=(_e => self.send(SetFocus(side)))
+      focusedItem=state.focusedItem
+      onFocusItem=(info => self.ReasonReact.send(SetItemFocus(side, info)))
+      onPathChange=(info => self.ReasonReact.send(SetPath(side, info)))
+      onClick=(_e => self.send(SetPanelFocus(side)))
     />
   </div>;
 };
@@ -79,34 +85,60 @@ let make = _children => {
   initialState: () => {
     left: {
       isFocused: true,
+      focusedItem: makeFileInfo("/Users/i.pomaskin", ".."),
       path: "/Users/i.pomaskin",
       files: getFiles("/Users/i.pomaskin")
     },
     right: {
       isFocused: false,
+      focusedItem: makeFileInfo("/Users/i.pomaskin", ".."),
       path: "/Users/i.pomaskin",
       files: getFiles("/Users/i.pomaskin")
     }
   },
+  subscriptions: _self => [
+    Sub(
+      () =>
+        DocumentRe.addEventListener(
+          "keydown",
+          _evt => Js.log(_evt),
+          Webapi.Dom.document
+        ),
+      _token =>
+        DocumentRe.removeEventListener(
+          "keydown",
+          _evt => Js.log(_evt),
+          Webapi.Dom.document
+        )
+    )
+  ],
   reducer: (action, state) =>
     switch action {
-    | SetPath(side, relativePath) =>
+    | SetPath(side, info) =>
       ReasonReact.Update(
         Lens.over(
           getLensBySide(side),
           panel => {
             ...panel,
-            path: getPath(panel.path, relativePath),
-            files: getFiles(getPath(panel.path, relativePath))
+            path: getPath(panel.path, info.name),
+            files: getFiles(getPath(panel.path, info.name))
           },
           state
         )
       )
-    | SetFocus(side) =>
+    | SetPanelFocus(side) =>
       ReasonReact.Update(
         state
         |> Lens.over(leftLens, panel => {...panel, isFocused: side === Left})
         |> Lens.over(rightLens, panel => {...panel, isFocused: side === Right})
+      )
+    | SetItemFocus(side, info) =>
+      ReasonReact.Update(
+        Lens.over(
+          getLensBySide(side),
+          panel => {...panel, focusedItem: info},
+          state
+        )
       )
     },
   render: self =>
