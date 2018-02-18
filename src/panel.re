@@ -41,8 +41,8 @@ let renderColumnItems = (~self, ~onPathChange, info) =>
         "u-bg-grey" |> Cn.ifBool(self.ReasonReact.state.focused === info.name)
       ])
     )
-    onClick=(_e => info.isFile ? Js.log(info) : onPathChange(info.name))
-    onMouseOver=(_e => self.ReasonReact.send(SetFocus(info.name)))>
+    onDoubleClick=(_e => info.isFile ? Js.log(info) : onPathChange(info.name))
+    onClick=(_e => self.ReasonReact.send(SetFocus(info.name)))>
     (ReasonReact.stringToElement(info.isFile ? fileImage : folderImage))
     (ReasonReact.stringToElement(info.name))
   </div>;
