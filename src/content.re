@@ -7,11 +7,12 @@ type panelSide =
   | Right;
 
 type action =
-  | SetPath(panelSide, fileInfo)
+  | SetPath(panelSide, string)
   | SetPanelFocus(panelSide)
   | SetItemFocus(panelSide, fileInfo)
+  | SetItemFocusOffset(string)
   | SetPanelItemsPerColumnCount(panelSide, int)
-  | DispatchKeyPress(Dom.keyboardEvent);
+  | DispatchKeyPress(string);
 
 type panelProps = {
   focusedItem: fileInfo,
@@ -51,7 +52,7 @@ let getPath = (path, relative) => Node_path.resolve(path, relative);
 let getFiles = path => Fs_utils.getFilesList(path);
 
 let keyPressHandler = (self, event) =>
-  self.ReasonReact.send(DispatchKeyPress(event));
+  self.ReasonReact.send(DispatchKeyPress(Webapi.Dom.KeyboardEvent.key(event)));
 
 let renderPanel = (side: panelSide, self) => {
   let state =
@@ -81,7 +82,7 @@ let renderPanel = (side: panelSide, self) => {
       focusedItem=state.focusedItem
       itemsPerColumn=state.itemsPerColumn
       onFocusItem=(info => self.send(SetItemFocus(side, info)))
-      onPathChange=(info => self.send(SetPath(side, info)))
+      onPathChange=(info => self.send(SetPath(side, info.name)))
       onClick=(_e => self.send(SetPanelFocus(side)))
       onItemsPerColumnChange=(
         itemsPerColumn =>
@@ -96,16 +97,22 @@ let make = _children => {
   initialState: () => {
     focused: Left,
     left: {
-      focusedItem: makeFileInfo("/Users/i.pomaskin", ".."),
-      path: "/Users/i.pomaskin",
-      files: getFiles("/Users/i.pomaskin"),
-      itemsPerColumn: 1
+      let files = getFiles("/Users/i.pomaskin");
+      {
+        focusedItem: List.nth(files, 0),
+        path: "/Users/i.pomaskin",
+        files,
+        itemsPerColumn: 1
+      };
     },
     right: {
-      focusedItem: makeFileInfo("/Users/i.pomaskin", ".."),
-      path: "/Users/i.pomaskin",
-      files: getFiles("/Users/i.pomaskin"),
-      itemsPerColumn: 1
+      let files = getFiles("/Users/i.pomaskin");
+      {
+        focusedItem: List.nth(files, 0),
+        path: "/Users/i.pomaskin",
+        files,
+        itemsPerColumn: 1
+      };
     }
   },
   subscriptions: self => [
@@ -124,14 +131,18 @@ let make = _children => {
   ],
   reducer: (action, state) =>
     switch action {
-    | SetPath(side, info) =>
+    | SetPath(side, relativePath) =>
       ReasonReact.Update(
         Lens.over(
           getLensBySide(side),
           panel => {
-            ...panel,
-            path: getPath(panel.path, info.name),
-            files: getFiles(getPath(panel.path, info.name))
+            let files = getFiles(getPath(panel.path, relativePath));
+            {
+              ...panel,
+              path: getPath(panel.path, relativePath),
+              files,
+              focusedItem: List.nth(files, 0)
+            };
           },
           state
         )
@@ -153,14 +164,13 @@ let make = _children => {
           state
         )
       )
-    | DispatchKeyPress(event) =>
+    | SetItemFocusOffset(keyName) =>
       ReasonReact.Update(
         Lens.over(
           getLensBySide(state.focused),
           panel => {
             let currentIndex = RList.indexOf(panel.focusedItem, panel.files);
             let idx = Option.default(0, currentIndex);
-            let keyName = Webapi.Dom.KeyboardEvent.key(event);
             let idxOffset =
               switch keyName {
               | "ArrowLeft" => idx - panel.itemsPerColumn
@@ -185,6 +195,24 @@ let make = _children => {
             {...panel, focusedItem};
           },
           state
+        )
+      )
+    | DispatchKeyPress(keyName) =>
+      ReasonReact.SideEffects(
+        (
+          self => {
+            let panel = Lens.view(getLensBySide(state.focused), state);
+            switch keyName {
+            | "ArrowLeft"
+            | "ArrowRight"
+            | "ArrowUp"
+            | "ArrowDown" => self.send(SetItemFocusOffset(keyName))
+            | "Enter" =>
+              self.send(SetPath(state.focused, panel.focusedItem.name))
+            | "Backspace" => self.send(SetPath(state.focused, ".."))
+            | _ => ()
+            };
+          }
         )
       )
     },
