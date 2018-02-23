@@ -17,6 +17,7 @@
   "bs-dependencies": [
     "reason-react",
     "rationale",
+    "reductive",
     "bs-node",
     "bs-webapi",
     "re-classnames"

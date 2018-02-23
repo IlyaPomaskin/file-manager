@@ -2840,12 +2840,18 @@ readdirp@^2.0.0:
     readable-stream "^2.0.2"
     set-immediate-shim "^1.0.1"
 
-reason-react@>=0.3.0:
+reason-react@>=0.3.0, reason-react@^0.3.0:
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/reason-react/-/reason-react-0.3.2.tgz#14574b619bd9bf2b6057d681867a5dfa69f2360f"
   dependencies:
     react ">=15.0.0 || >=16.0.0"
     react-dom ">=15.0.0 || >=16.0.0"
+
+reductive@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/reductive/-/reductive-0.2.0.tgz#3cd6cceb09fac9031bd20cc4254b36a118b5a1f3"
+  dependencies:
+    reason-react "^0.3.0"
 
 regenerator-runtime@^0.11.0:
   version "0.11.1"
