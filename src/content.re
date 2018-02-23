@@ -136,12 +136,24 @@ let make = _children => {
         Lens.over(
           getLensBySide(side),
           panel => {
-            let files = getFiles(getPath(panel.path, relativePath));
+            let nextFiles = getFiles(getPath(panel.path, relativePath));
+            let nextFocusedItemIndex =
+              switch relativePath {
+              | ".." =>
+                let currentDirectoryName = Node_path.basename(panel.path);
+                let idx =
+                  RList.findIndex(
+                    info => info.name === currentDirectoryName,
+                    nextFiles
+                  );
+                Option.default(0, idx);
+              | _ => 0
+              };
             {
               ...panel,
               path: getPath(panel.path, relativePath),
-              files,
-              focusedItem: List.nth(files, 0)
+              files: nextFiles,
+              focusedItem: List.nth(nextFiles, nextFocusedItemIndex)
             };
           },
           state
