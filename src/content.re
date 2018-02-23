@@ -2,23 +2,26 @@ open Rationale;
 
 open Fs_utils;
 
-type panelSides =
+type panelSide =
   | Left
   | Right;
 
 type action =
-  | SetPath(panelSides, fileInfo)
-  | SetPanelFocus(panelSides)
-  | SetItemFocus(panelSides, fileInfo);
+  | SetPath(panelSide, fileInfo)
+  | SetPanelFocus(panelSide)
+  | SetItemFocus(panelSide, fileInfo)
+  | SetPanelItemsPerColumnCount(panelSide, int)
+  | DispatchKeyPress(Dom.keyboardEvent);
 
 type panelProps = {
-  isFocused: bool,
   focusedItem: fileInfo,
   path: string,
-  files: list(Fs_utils.fileInfo)
+  files: list(Fs_utils.fileInfo),
+  itemsPerColumn: int
 };
 
 type state = {
+  focused: panelSide,
   left: panelProps,
   right: panelProps
 };
@@ -47,7 +50,10 @@ let getPath = (path, relative) => Node_path.resolve(path, relative);
 
 let getFiles = path => Fs_utils.getFilesList(path);
 
-let renderPanel = (side: panelSides, self) => {
+let keyPressHandler = (self, event) =>
+  self.ReasonReact.send(DispatchKeyPress(event));
+
+let renderPanel = (side: panelSide, self) => {
   let state =
     switch side {
     | Left => self.ReasonReact.state.left
@@ -59,7 +65,7 @@ let renderPanel = (side: panelSides, self) => {
       value=state.path
       onChange=(
         event =>
-          self.ReasonReact.send(
+          self.send(
             SetPath(
               side,
               ReactDOMRe.domElementToObj(ReactEventRe.Form.target(event))##value
@@ -69,13 +75,18 @@ let renderPanel = (side: panelSides, self) => {
       tabIndex=(-1)
     />
     <Panel
-      isFocused=state.isFocused
+      isFocused=(self.state.focused === side)
       path=state.path
       files=state.files
       focusedItem=state.focusedItem
-      onFocusItem=(info => self.ReasonReact.send(SetItemFocus(side, info)))
-      onPathChange=(info => self.ReasonReact.send(SetPath(side, info)))
+      itemsPerColumn=state.itemsPerColumn
+      onFocusItem=(info => self.send(SetItemFocus(side, info)))
+      onPathChange=(info => self.send(SetPath(side, info)))
       onClick=(_e => self.send(SetPanelFocus(side)))
+      onItemsPerColumnChange=(
+        itemsPerColumn =>
+          self.send(SetPanelItemsPerColumnCount(side, itemsPerColumn))
+      )
     />
   </div>;
 };
@@ -83,31 +94,30 @@ let renderPanel = (side: panelSides, self) => {
 let make = _children => {
   ...component,
   initialState: () => {
+    focused: Left,
     left: {
-      isFocused: true,
       focusedItem: makeFileInfo("/Users/i.pomaskin", ".."),
       path: "/Users/i.pomaskin",
-      files: getFiles("/Users/i.pomaskin")
+      files: getFiles("/Users/i.pomaskin"),
+      itemsPerColumn: 1
     },
     right: {
-      isFocused: false,
       focusedItem: makeFileInfo("/Users/i.pomaskin", ".."),
       path: "/Users/i.pomaskin",
-      files: getFiles("/Users/i.pomaskin")
+      files: getFiles("/Users/i.pomaskin"),
+      itemsPerColumn: 1
     }
   },
-  subscriptions: _self => [
+  subscriptions: self => [
     Sub(
       () =>
-        DocumentRe.addEventListener(
-          "keydown",
-          _evt => Js.log(_evt),
+        Webapi.Dom.Document.addKeyDownEventListener(
+          keyPressHandler(self),
           Webapi.Dom.document
         ),
       _token =>
-        DocumentRe.removeEventListener(
-          "keydown",
-          _evt => Js.log(_evt),
+        Webapi.Dom.Document.addKeyDownEventListener(
+          keyPressHandler(self),
           Webapi.Dom.document
         )
     )
@@ -126,17 +136,54 @@ let make = _children => {
           state
         )
       )
-    | SetPanelFocus(side) =>
-      ReasonReact.Update(
-        state
-        |> Lens.over(leftLens, panel => {...panel, isFocused: side === Left})
-        |> Lens.over(rightLens, panel => {...panel, isFocused: side === Right})
-      )
+    | SetPanelFocus(side) => ReasonReact.Update({...state, focused: side})
     | SetItemFocus(side, info) =>
       ReasonReact.Update(
         Lens.over(
           getLensBySide(side),
           panel => {...panel, focusedItem: info},
+          state
+        )
+      )
+    | SetPanelItemsPerColumnCount(side, itemsPerColumn) =>
+      ReasonReact.Update(
+        Lens.over(
+          getLensBySide(side),
+          panel => {...panel, itemsPerColumn},
+          state
+        )
+      )
+    | DispatchKeyPress(event) =>
+      ReasonReact.Update(
+        Lens.over(
+          getLensBySide(state.focused),
+          panel => {
+            let currentIndex = RList.indexOf(panel.focusedItem, panel.files);
+            let idx = Option.default(0, currentIndex);
+            let keyName = Webapi.Dom.KeyboardEvent.key(event);
+            let idxOffset =
+              switch keyName {
+              | "ArrowLeft" => idx - panel.itemsPerColumn
+              | "ArrowRight" => idx + panel.itemsPerColumn
+              | "ArrowUp" => idx - 1
+              | "ArrowDown" => idx + 1
+              | _ => 0
+              };
+            let nextIdx = {
+              let lastIndex = List.length(panel.files) - 1;
+              if (idxOffset > lastIndex) {
+                min(lastIndex, idxOffset);
+              } else {
+                max(0, idxOffset);
+              };
+            };
+            let focusedItem =
+              Option.default(
+                panel.focusedItem,
+                Rationale.RList.nth(nextIdx, panel.files)
+              );
+            {...panel, focusedItem};
+          },
           state
         )
       )
