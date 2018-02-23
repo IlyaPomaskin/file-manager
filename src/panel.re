@@ -9,7 +9,8 @@ type retainedProps = {
   onItemsPerColumnChange: int => unit,
   focusedItem: fileInfo,
   path: string,
-  files: list(fileInfo)
+  files: list(fileInfo),
+  isFocused: bool
 };
 
 type state = {panelRef: ref(option(Dom.element))};
@@ -67,7 +68,13 @@ let renderColumnItems = (retainedProps, info) =>
     className=(
       Cn.make([
         "panel-item",
-        "panel-item--focused" |> Cn.ifBool(retainedProps.focusedItem === info),
+        "panel-item--focused"
+        |> Cn.ifBool(self.ReasonReact.retainedProps.focusedItem === info),
+        "panel-item--active-focused"
+        |> Cn.ifBool(
+             self.ReasonReact.retainedProps.focusedItem === info
+             && self.ReasonReact.retainedProps.isFocused
+           ),
         "u-color-brand-lighter" |> Cn.ifBool(info.isFile),
         "u-color-brand-darker" |> Cn.ifBool(! info.isFile)
       ])
@@ -104,7 +111,8 @@ let make =
     onItemsPerColumnChange,
     focusedItem,
     path,
-    files
+    files,
+    isFocused
   },
   subscriptions: self => [
     Sub(

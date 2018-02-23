@@ -222,6 +222,8 @@ let make = _children => {
             | "Enter" =>
               self.send(SetPath(state.focused, panel.focusedItem.name))
             | "Backspace" => self.send(SetPath(state.focused, ".."))
+            | "Tab" =>
+              self.send(SetPanelFocus(state.focused === Left ? Right : Left))
             | _ => ()
             };
           }
