@@ -46,7 +46,6 @@ let appReducer = (state, action) =>
     Lens.over(
       getLensBySide(side),
       panel => {
-        Js.log2(side, relativePath);
         let nextFiles =
           Fs_utils.getFilesList(Node_path.resolve(panel.path, relativePath));
         let nextFocusedItemIndex =
