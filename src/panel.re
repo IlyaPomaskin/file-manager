@@ -19,8 +19,6 @@ let fileImage = {js|📄|js};
 
 let folderImage = {js|📁|js};
 
-let getItemHeight = () => 24;
-
 let renderColumn = (renderItem, index, columnItems) =>
   <div key=(string_of_int(index)) className="panel-column">
     (
@@ -31,16 +29,12 @@ let renderColumn = (renderItem, index, columnItems) =>
     )
   </div>;
 
-let component = ReasonReact.reducerComponentWithRetainedProps("Panel");
-
 let updatePanelHeight = self =>
   switch self.ReasonReact.state.panelRef^ {
   | Some(node) =>
-    let panelHeight =
-      node |> ElementRe.getBoundingClientRect |> DomRectRe.height;
-    let itemHeight = getItemHeight();
+    let panelHeight = Panel_utils.getPanelHeight(node);
     self.ReasonReact.retainedProps.onItemsPerColumnChange(
-      max(panelHeight / itemHeight, 1)
+      Panel_utils.getColumnsCount(panelHeight)
     );
     self.ReasonReact.send(SetPanelHeight(panelHeight));
   | _ => ()
@@ -51,40 +45,9 @@ let resizeEventListener = (_evt, self) => updatePanelHeight(self);
 let setPanelRef = (node, self) =>
   self.ReasonReact.state.panelRef := Js.Nullable.to_opt(node);
 
-let scrollToNode = (shouldScroll, panelRef, node) => {
-  let optPanelItemNode = Js.toOption(node);
-  switch (shouldScroll, optPanelItemNode, panelRef) {
-  | (true, Some(panelItemNode), Some(panelNode)) =>
-    let itemOffsetX1 =
-      panelItemNode
-      |> ElementRe.unsafeAsHtmlElement
-      |> HtmlElementRe.offsetLeft;
-    let itemOffsetX2 =
-      panelItemNode
-      |> ElementRe.unsafeAsHtmlElement
-      |> HtmlElementRe.clientWidth
-      |> (width => width + itemOffsetX1);
-    let panelScrollX1 =
-      panelNode |> ElementRe.unsafeAsHtmlElement |> HtmlElementRe.scrollLeft;
-    let panelScrollX2 =
-      panelNode
-      |> ElementRe.unsafeAsHtmlElement
-      |> HtmlElementRe.clientWidth
-      |> (width => width + panelScrollX1 + 5);
-    if (itemOffsetX1 !== panelScrollX1
-        && (itemOffsetX1 < panelScrollX1 || itemOffsetX2 > panelScrollX2)) {
-      ElementRe.setScrollLeft(panelNode, itemOffsetX1);
-    };
-  | _ => ()
-  };
-};
-
 let renderColumnItems = (panelRef, retainedProps, info) =>
   <div
     key=info.name
-    style=(
-      ReactDOMRe.Style.make(~height=string_of_int(getItemHeight()) ++ "px", ())
-    )
     className=(
       Cn.make([
         "panel-item",
@@ -98,7 +61,7 @@ let renderColumnItems = (panelRef, retainedProps, info) =>
       ])
     )
     ref=(
-      scrollToNode(
+      Panel_utils.scrollToNode(
         retainedProps.isFocused && retainedProps.focusedItem.name === info.name,
         panelRef
       )
@@ -108,6 +71,8 @@ let renderColumnItems = (panelRef, retainedProps, info) =>
     (ReasonReact.stringToElement(info.isFile ? fileImage : folderImage))
     (ReasonReact.stringToElement(info.name))
   </div>;
+
+let component = ReasonReact.reducerComponentWithRetainedProps("Panel");
 
 let make =
     (
