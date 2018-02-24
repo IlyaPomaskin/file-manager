@@ -7,7 +7,7 @@ let renderPanel = (~side, ~state, ~dispatch) => {
   <div className="o-grid__cell grid">
     <input
       className="path"
-      value=panel.focusedItem.name
+      value=panel.path
       onChange=(
         event =>
           dispatch(
