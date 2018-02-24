@@ -40,3 +40,23 @@ let scrollToNode = (shouldScroll, panelRef, node) => {
   | _ => ()
   };
 };
+
+let getMaxColumnWidth = panelRef =>
+  switch panelRef {
+  | Some(node) =>
+    node
+    |> ElementRe.querySelectorAll(".panel-column")
+    |> NodeListRe.toArray
+    |> Array.to_list
+    |> List.map(ElementRe.ofNode)
+    |> List.filter(Rationale.Option.isSome)
+    |> List.fold_left(
+         (maxWidth, optNode) =>
+           switch optNode {
+           | Some(node) => max(maxWidth, ElementRe.clientWidth(node))
+           | _ => maxWidth
+           },
+         0
+       )
+  | _ => 0
+  };

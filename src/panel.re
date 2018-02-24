@@ -1,6 +1,7 @@
 open Fs_utils;
 
 type action =
+  | SetColumnWidth(int)
   | SetPanelHeight(int);
 
 type retainedProps = {
@@ -13,21 +14,14 @@ type retainedProps = {
   isFocused: bool
 };
 
-type state = {panelRef: ref(option(Dom.element))};
+type state = {
+  panelRef: ref(option(Dom.element)),
+  columnWidth: int
+};
 
 let fileImage = {js|📄|js};
 
 let folderImage = {js|📁|js};
-
-let renderColumn = (renderItem, index, columnItems) =>
-  <div key=(string_of_int(index)) className="panel-column">
-    (
-      columnItems
-      |> List.map(renderItem)
-      |> Array.of_list
-      |> ReasonReact.arrayToElement
-    )
-  </div>;
 
 let updatePanelHeight = self =>
   switch self.ReasonReact.state.panelRef^ {
@@ -40,10 +34,32 @@ let updatePanelHeight = self =>
   | _ => ()
   };
 
+let updateColumnsWidth = self =>
+  self.ReasonReact.send(
+    SetPanelHeight(
+      Panel_utils.getMaxColumnWidth(self.ReasonReact.state.panelRef^)
+    )
+  );
+
 let resizeEventListener = (_evt, self) => updatePanelHeight(self);
 
 let setPanelRef = (node, self) =>
   self.ReasonReact.state.panelRef := Js.Nullable.to_opt(node);
+
+let renderColumn = (columnWidth, renderItem, index, columnItems) =>
+  <div
+    key=(string_of_int(index))
+    className="panel-column"
+    style=(
+      ReactDOMRe.Style.make(~width=string_of_int(columnWidth) ++ "px", ())
+    )>
+    (
+      columnItems
+      |> List.map(renderItem)
+      |> Array.of_list
+      |> ReasonReact.arrayToElement
+    )
+  </div>;
 
 let renderColumnItems = (panelRef, retainedProps, info) =>
   <div
@@ -117,15 +133,23 @@ let make =
   ],
   didMount: self => {
     updatePanelHeight(self);
+    updateColumnsWidth(self);
     ReasonReact.NoUpdate;
   },
   willReceiveProps: self => {
     if (self.retainedProps.files !== files) {
       updatePanelHeight(self);
+      updateColumnsWidth(self);
     };
     self.state;
   },
-  initialState: () => {panelRef: ref(None)},
+  initialState: () => {panelRef: ref(None), columnWidth: 0},
+  reducer: (action, state) =>
+    switch action {
+    | SetColumnWidth(width) =>
+      ReasonReact.Update({...state, columnWidth: width})
+    | _ => ReasonReact.NoUpdate
+    },
   render: self =>
     <div
       className=("panel " ++ (isFocused ? "panel--focused" : ""))
@@ -136,6 +160,7 @@ let make =
         |> Rationale.RList.splitEvery(itemsPerColumn)
         |> List.mapi(
              renderColumn(
+               self.state.columnWidth,
                renderColumnItems(self.state.panelRef^, self.retainedProps)
              )
            )
