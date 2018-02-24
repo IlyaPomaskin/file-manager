@@ -51,15 +51,35 @@ let resizeEventListener = (_evt, self) => updatePanelHeight(self);
 let setPanelRef = (node, self) =>
   self.ReasonReact.state.panelRef := Js.Nullable.to_opt(node);
 
-let scrollToNode = node => {
-  let optNode = Js.Nullable.to_opt(node);
-  switch optNode {
-  | Some(n) => Webapi.Dom.Element.scrollIntoView(n)
+let scrollToNode = (shouldScroll, panelRef, node) => {
+  let optPanelItemNode = Js.toOption(node);
+  switch (shouldScroll, optPanelItemNode, panelRef) {
+  | (true, Some(panelItemNode), Some(panelNode)) =>
+    let itemOffsetX1 =
+      panelItemNode
+      |> ElementRe.unsafeAsHtmlElement
+      |> HtmlElementRe.offsetLeft;
+    let itemOffsetX2 =
+      panelItemNode
+      |> ElementRe.unsafeAsHtmlElement
+      |> HtmlElementRe.clientWidth
+      |> (width => width + itemOffsetX1);
+    let panelScrollX1 =
+      panelNode |> ElementRe.unsafeAsHtmlElement |> HtmlElementRe.scrollLeft;
+    let panelScrollX2 =
+      panelNode
+      |> ElementRe.unsafeAsHtmlElement
+      |> HtmlElementRe.clientWidth
+      |> (width => width + panelScrollX1 + 5);
+    if (itemOffsetX1 !== panelScrollX1
+        && (itemOffsetX1 < panelScrollX1 || itemOffsetX2 > panelScrollX2)) {
+      ElementRe.setScrollLeft(panelNode, itemOffsetX1);
+    };
   | _ => ()
   };
 };
 
-let renderColumnItems = (retainedProps, info) =>
+let renderColumnItems = (panelRef, retainedProps, info) =>
   <div
     key=info.name
     style=(
@@ -68,22 +88,20 @@ let renderColumnItems = (retainedProps, info) =>
     className=(
       Cn.make([
         "panel-item",
-        "panel-item--focused"
-        |> Cn.ifBool(self.ReasonReact.retainedProps.focusedItem === info),
+        "panel-item--focused" |> Cn.ifBool(retainedProps.focusedItem === info),
         "panel-item--active-focused"
         |> Cn.ifBool(
-             self.ReasonReact.retainedProps.focusedItem === info
-             && self.ReasonReact.retainedProps.isFocused
+             retainedProps.focusedItem === info && retainedProps.isFocused
            ),
         "u-color-brand-lighter" |> Cn.ifBool(info.isFile),
         "u-color-brand-darker" |> Cn.ifBool(! info.isFile)
       ])
     )
     ref=(
-      node =>
-        if (retainedProps.focusedItem === info) {
-          scrollToNode(node);
-        }
+      scrollToNode(
+        retainedProps.isFocused && retainedProps.focusedItem.name === info.name,
+        panelRef
+      )
     )
     onDoubleClick=(_e => retainedProps.onPathChange(info))
     onClick=(_e => retainedProps.onFocusItem(info))>
@@ -151,7 +169,11 @@ let make =
       (
         files
         |> Rationale.RList.splitEvery(itemsPerColumn)
-        |> List.mapi(renderColumn(renderColumnItems(self.retainedProps)))
+        |> List.mapi(
+             renderColumn(
+               renderColumnItems(self.state.panelRef^, self.retainedProps)
+             )
+           )
         |> Array.of_list
         |> ReasonReact.arrayToElement
       )
