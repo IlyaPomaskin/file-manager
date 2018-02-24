@@ -1,5 +1,3 @@
-open Reductive;
-
 open Rationale;
 
 open Fs_utils;

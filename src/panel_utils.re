@@ -10,8 +10,8 @@ let getColumnsCount = panelHeight => {
 
 let scrollToNode = (shouldScroll, panelRef, node) => {
   let optPanelItemNode = Js.toOption(node);
-  switch (shouldScroll, optPanelItemNode, panelRef) {
-  | (true, Some(panelItemNode), Some(panelNode)) =>
+  switch (shouldScroll, panelRef, optPanelItemNode) {
+  | (true, Some(panelNode), Some(panelItemNode)) =>
     let itemOffsetX1 =
       panelItemNode
       |> ElementRe.unsafeAsHtmlElement
@@ -21,8 +21,13 @@ let scrollToNode = (shouldScroll, panelRef, node) => {
       |> ElementRe.unsafeAsHtmlElement
       |> HtmlElementRe.clientWidth
       |> (width => width + itemOffsetX1);
+    let panelOffset =
+      panelNode |> ElementRe.unsafeAsHtmlElement |> HtmlElementRe.offsetLeft;
     let panelScrollX1 =
-      panelNode |> ElementRe.unsafeAsHtmlElement |> HtmlElementRe.scrollLeft;
+      panelNode
+      |> ElementRe.unsafeAsHtmlElement
+      |> HtmlElementRe.scrollLeft
+      |> (x => x + panelOffset);
     let panelScrollX2 =
       panelNode
       |> ElementRe.unsafeAsHtmlElement
@@ -30,7 +35,7 @@ let scrollToNode = (shouldScroll, panelRef, node) => {
       |> (width => width + panelScrollX1 + 5);
     if (itemOffsetX1 !== panelScrollX1
         && (itemOffsetX1 < panelScrollX1 || itemOffsetX2 > panelScrollX2)) {
-      ElementRe.setScrollLeft(panelNode, itemOffsetX1);
+      ElementRe.setScrollLeft(panelNode, itemOffsetX1 - panelOffset);
     };
   | _ => ()
   };
