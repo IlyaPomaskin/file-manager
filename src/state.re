@@ -6,25 +6,37 @@ type panelType = {
   focusedItem: fileInfo,
   path: string,
   files: list(fileInfo),
-  itemsPerColumn: int
+  itemsPerColumn: int,
+  selectedFiles: list(fileInfo)
 };
 
-type side =
-  | Left
-  | Right;
+module Offset = {
+  type t =
+    | Left
+    | Right
+    | Up
+    | Down;
+};
+
+module PanelSide = {
+  type t =
+    | Left
+    | Right;
+};
 
 type appState = {
-  focused: side,
+  focused: PanelSide.t,
   left: panelType,
   right: panelType
 };
 
 type actions =
-  | SetPath(side, string)
-  | SetPanelFocus(side)
-  | SetItemFocus(side, fileInfo)
-  | SetItemFocusOffset(string)
-  | SetPanelItemsPerColumnCount(side, int);
+  | SetPath(PanelSide.t, string)
+  | SetPanelFocus(PanelSide.t)
+  | SetItemFocus(PanelSide.t, fileInfo)
+  | SetPanelItemsPerColumnCount(PanelSide.t, int)
+  | SelectItem(fileInfo)
+  | SetItemFocusOffset(Offset.t);
 
 let leftLens =
   Lens.make(state => state.left, (value, state) => {...state, left: value});
@@ -34,8 +46,8 @@ let rightLens =
 
 let getLensBySide = side =>
   switch side {
-  | Left => leftLens
-  | Right => rightLens
+  | PanelSide.Left => leftLens
+  | PanelSide.Right => rightLens
   };
 
 let appReducer = (state, action) =>
@@ -62,7 +74,8 @@ let appReducer = (state, action) =>
           ...panel,
           path: Node_path.resolve(panel.path, relativePath),
           files: nextFiles,
-          focusedItem: List.nth(nextFiles, nextFocusedItemIndex)
+          focusedItem: List.nth(nextFiles, nextFocusedItemIndex),
+          selectedFiles: []
         };
       },
       state
@@ -76,19 +89,18 @@ let appReducer = (state, action) =>
     )
   | SetPanelItemsPerColumnCount(side, itemsPerColumn) =>
     Lens.over(getLensBySide(side), panel => {...panel, itemsPerColumn}, state)
-  | SetItemFocusOffset(keyName) =>
+  | SetItemFocusOffset(offset) =>
     Lens.over(
       getLensBySide(state.focused),
       panel => {
         let currentIndex = RList.indexOf(panel.focusedItem, panel.files);
         let idx = Option.default(0, currentIndex);
         let idxOffset =
-          switch keyName {
-          | "ArrowLeft" => idx - panel.itemsPerColumn
-          | "ArrowRight" => idx + panel.itemsPerColumn
-          | "ArrowUp" => idx - 1
-          | "ArrowDown" => idx + 1
-          | _ => 0
+          switch offset {
+          | Offset.Left => idx - panel.itemsPerColumn
+          | Offset.Right => idx + panel.itemsPerColumn
+          | Offset.Up => idx - 1
+          | Offset.Down => idx + 1
           };
         let nextIdx = {
           let lastIndex = List.length(panel.files) - 1;
@@ -107,6 +119,15 @@ let appReducer = (state, action) =>
       },
       state
     )
+  | SelectItem(info) =>
+    Lens.over(
+      getLensBySide(state.focused),
+      panel => {
+        let nextSelectedFiles = List.append([info], panel.selectedFiles);
+        {...panel, selectedFiles: nextSelectedFiles};
+      },
+      state
+    )
   | _ => state
   };
 
@@ -114,16 +135,28 @@ let store =
   Reductive.Store.create(
     ~reducer=appReducer,
     ~preloadedState={
-      focused: Left,
+      focused: PanelSide.Left,
       left: {
         let path = ".";
         let files = Fs_utils.getFilesList(path);
-        {focusedItem: List.nth(files, 0), path, files, itemsPerColumn: 1};
+        {
+          focusedItem: List.nth(files, 0),
+          path,
+          files,
+          itemsPerColumn: 1,
+          selectedFiles: []
+        };
       },
       right: {
         let path = ".";
         let files = Fs_utils.getFilesList(path);
-        {focusedItem: List.nth(files, 0), path, files, itemsPerColumn: 1};
+        {
+          focusedItem: List.nth(files, 0),
+          path,
+          files,
+          itemsPerColumn: 1,
+          selectedFiles: []
+        };
       }
     },
     ()
