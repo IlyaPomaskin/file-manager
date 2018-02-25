@@ -24,7 +24,7 @@ let keyPressHandler = event => {
   | (true, "ArrowDown") =>
     keyName
     |> arrowKeyNameToOffset
-    |> Panel_utils.getItemByOffset(panel)
+    |> PanelUtils.getItemByOffset(panel)
     <$> (
       item => {
         dispatch(SelectItems(state.focused, item));
@@ -38,7 +38,7 @@ let keyPressHandler = event => {
   | (false, "ArrowDown") =>
     keyName
     |> arrowKeyNameToOffset
-    |> Panel_utils.getItemByOffset(panel)
+    |> PanelUtils.getItemByOffset(panel)
     <$> (item => dispatch(SetItemFocus(state.focused, item)))
     |> ignore
   | (_, "Enter") => dispatch(SetPath(state.focused, panel.focusedItem.name))

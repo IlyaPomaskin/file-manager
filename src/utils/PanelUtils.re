@@ -2,8 +2,6 @@ open Rationale;
 
 open Rationale.Option;
 
-open State;
-
 open Types;
 
 let getItemHeight = () => 24;

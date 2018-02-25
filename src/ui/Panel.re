@@ -28,9 +28,9 @@ let folderImage = {js|📁|js};
 let updatePanelHeight = self =>
   switch self.ReasonReact.state.panelRef^ {
   | Some(node) =>
-    let panelHeight = Panel_utils.getPanelHeight(node);
+    let panelHeight = PanelUtils.getPanelHeight(node);
     self.ReasonReact.retainedProps.onItemsPerColumnChange(
-      Panel_utils.getColumnsCount(panelHeight)
+      PanelUtils.getColumnsCount(panelHeight)
     );
     self.ReasonReact.send(SetPanelHeight(panelHeight));
   | _ => ()
@@ -39,7 +39,7 @@ let updatePanelHeight = self =>
 let updateColumnsWidth = self =>
   self.ReasonReact.send(
     SetPanelHeight(
-      Panel_utils.getMaxColumnWidth(self.ReasonReact.state.panelRef^)
+      PanelUtils.getMaxColumnWidth(self.ReasonReact.state.panelRef^)
     )
   );
 
@@ -85,7 +85,7 @@ let renderColumnItems = (panelRef, retainedProps, info) =>
       ])
     )
     ref=(
-      Panel_utils.scrollToNode(
+      PanelUtils.scrollToNode(
         retainedProps.isFocused
         && retainedProps.panel.focusedItem.name === info.name,
         panelRef

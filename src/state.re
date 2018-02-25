@@ -36,7 +36,7 @@ let appReducer = (state, action) =>
       getLensBySide(side),
       panel => {
         let nextFiles =
-          Fs_utils.getFilesList(Node_path.resolve(panel.path, relativePath));
+          FsUtils.getFilesList(Node_path.resolve(panel.path, relativePath));
         let nextFocusedItemIndex =
           switch relativePath {
           | ".." =>
@@ -102,7 +102,7 @@ let store =
       focused: PanelSide.Left,
       left: {
         let path = ".";
-        let files = Fs_utils.getFilesList(path);
+        let files = FsUtils.getFilesList(path);
         {
           focusedItem: List.nth(files, 0),
           path,
@@ -113,7 +113,7 @@ let store =
       },
       right: {
         let path = ".";
-        let files = Fs_utils.getFilesList(path);
+        let files = FsUtils.getFilesList(path);
         {
           focusedItem: List.nth(files, 0),
           path,
