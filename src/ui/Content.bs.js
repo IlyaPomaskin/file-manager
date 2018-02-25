@@ -8,10 +8,10 @@ var Reductive = require("reductive/src/reductive.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var Lens$Rationale = require("rationale/src/Lens.js");
 var Panel$ReactTemplate = require("./Panel.bs.js");
-var State$ReactTemplate = require("../State.bs.js");
+var Store$ReactTemplate = require("../store/Store.bs.js");
 
-function renderPanel(side, state, dispatch) {
-  var panel = Lens$Rationale.view(State$ReactTemplate.getLensBySide(side), state);
+function renderPanel(side, state, rootDispatch, panelDispatch) {
+  var panel = Lens$Rationale.view(Store$ReactTemplate.getLensBySide(side), state);
   return React.createElement("div", {
               className: "o-grid__cell grid"
             }, React.createElement("input", {
@@ -19,28 +19,16 @@ function renderPanel(side, state, dispatch) {
                   tabIndex: -1,
                   value: panel[/* path */1],
                   onChange: (function ($$event) {
-                      return Curry._1(dispatch, /* SetPath */Block.__(0, [
-                                    side,
-                                    $$event.target.value
-                                  ]));
+                      return Curry._1(panelDispatch, /* SetPath */Block.__(0, [$$event.target.value]));
                     })
                 }), ReasonReact.element(/* None */0, /* None */0, Panel$ReactTemplate.make(panel, +(state[/* focused */0] === side), (function (info) {
-                        return Curry._1(dispatch, /* SetItemFocus */Block.__(2, [
-                                      side,
-                                      info
-                                    ]));
+                        return Curry._1(panelDispatch, /* SetItemFocus */Block.__(1, [info]));
                       }), (function (info) {
-                        return Curry._1(dispatch, /* SetPath */Block.__(0, [
-                                      side,
-                                      info[/* name */0]
-                                    ]));
+                        return Curry._1(panelDispatch, /* SetPath */Block.__(0, [info[/* name */0]]));
                       }), (function () {
-                        return Curry._1(dispatch, /* SetPanelFocus */Block.__(1, [side]));
+                        return Curry._1(rootDispatch, /* SetPanelFocus */[side]);
                       }), (function (itemsPerColumn) {
-                        return Curry._1(dispatch, /* SetPanelItemsPerColumnCount */Block.__(3, [
-                                      side,
-                                      itemsPerColumn
-                                    ]));
+                        return Curry._1(panelDispatch, /* SetPanelItemsPerColumnCount */Block.__(2, [itemsPerColumn]));
                       }), /* array */[])));
 }
 
@@ -53,7 +41,21 @@ function make(state, dispatch, _) {
                   className: "content"
                 }, React.createElement("div", {
                       className: "o-grid o-grid--no-gutter"
-                    }, renderPanel(/* Left */0, state, dispatch), renderPanel(/* Right */1, state, dispatch)));
+                    }, renderPanel(/* Left */0, state, (function (a) {
+                            return Curry._1(dispatch, /* RootAction */Block.__(1, [a]));
+                          }), (function (a) {
+                            return Curry._1(dispatch, /* PanelAction */Block.__(0, [
+                                          /* Left */0,
+                                          a
+                                        ]));
+                          })), renderPanel(/* Right */1, state, (function (a) {
+                            return Curry._1(dispatch, /* RootAction */Block.__(1, [a]));
+                          }), (function (a) {
+                            return Curry._1(dispatch, /* PanelAction */Block.__(0, [
+                                          /* Right */1,
+                                          a
+                                        ]));
+                          }))));
     });
   return newrecord;
 }
@@ -63,7 +65,7 @@ var ContentComponent = /* module */[
   /* make */make
 ];
 
-var partial_arg = Reductive.Provider[/* createMake */0](/* Some */["ContentConnect"], State$ReactTemplate.store);
+var partial_arg = Reductive.Provider[/* createMake */0](/* Some */["ContentConnect"], Store$ReactTemplate.store);
 
 function make$1(param) {
   return partial_arg(make, param);

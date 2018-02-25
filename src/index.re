@@ -12,11 +12,11 @@ let arrowKeyNameToOffset = keyName =>
   };
 
 let keyPressHandler = event => {
-  let state = Reductive.Store.getState(State.store);
-  let dispatch = Reductive.Store.dispatch(State.store);
+  let state = Reductive.Store.getState(Store.store);
+  let dispatch = Reductive.Store.dispatch(Store.store);
   let keyName = Webapi.Dom.KeyboardEvent.key(event);
   let shiftKey = Webapi.Dom.KeyboardEvent.shiftKey(event);
-  let panel = Rationale.Lens.view(State.getLensBySide(state.focused), state);
+  let panel = Rationale.Lens.view(Store.getLensBySide(state.focused), state);
   switch (shiftKey, keyName) {
   | (true, "ArrowLeft")
   | (true, "ArrowRight")
@@ -27,8 +27,8 @@ let keyPressHandler = event => {
     |> PanelUtils.getItemByOffset(panel)
     <$> (
       item => {
-        dispatch(SelectItems(state.focused, item));
-        dispatch(SetItemFocus(state.focused, item));
+        dispatch(PanelAction(state.focused, SelectItems(item)));
+        dispatch(PanelAction(state.focused, SetItemFocus(item)));
       }
     )
     |> ignore
@@ -39,15 +39,18 @@ let keyPressHandler = event => {
     keyName
     |> arrowKeyNameToOffset
     |> PanelUtils.getItemByOffset(panel)
-    <$> (item => dispatch(SetItemFocus(state.focused, item)))
+    <$> (item => dispatch(PanelAction(state.focused, SetItemFocus(item))))
     |> ignore
-  | (_, "Enter") => dispatch(SetPath(state.focused, panel.focusedItem.name))
-  | (_, "Backspace") => dispatch(SetPath(state.focused, ".."))
+  | (_, "Enter") =>
+    dispatch(PanelAction(state.focused, SetPath(panel.focusedItem.name)))
+  | (_, "Backspace") => dispatch(PanelAction(state.focused, SetPath("..")))
   | (_, "Tab") =>
     dispatch(
-      SetPanelFocus(
-        state.focused === Types.PanelSide.Left ?
-          Types.PanelSide.Right : Types.PanelSide.Left
+      RootAction(
+        SetPanelFocus(
+          state.focused === Types.PanelSide.Left ?
+            Types.PanelSide.Right : Types.PanelSide.Left
+        )
       )
     )
   | _ => ()

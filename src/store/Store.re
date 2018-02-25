@@ -2,20 +2,22 @@ open Rationale;
 
 open Types;
 
-open Types.FileInfo;
+module Action = {
+  type t =
+    | SetPanelFocus(PanelSide.t);
+};
+
+module Actions = {
+  type t =
+    | PanelAction(PanelSide.t, PanelReducer.Action.t)
+    | RootAction(Action.t);
+};
 
 type appState = {
   focused: PanelSide.t,
   left: PanelType.t,
   right: PanelType.t
 };
-
-type actions =
-  | SetPath(PanelSide.t, string)
-  | SetPanelFocus(PanelSide.t)
-  | SetItemFocus(PanelSide.t, FileInfo.t)
-  | SetPanelItemsPerColumnCount(PanelSide.t, int)
-  | SelectItems(PanelSide.t, FileInfo.t);
 
 let leftLens =
   Lens.make(state => state.left, (value, state) => {...state, left: value});
@@ -29,67 +31,13 @@ let getLensBySide = side =>
   | PanelSide.Right => rightLens
   };
 
-let appReducer = (state, action) =>
+let appReducer = (state, action: Actions.t) =>
   switch action {
-  | SetPath(side, relativePath) =>
+  | RootAction(SetPanelFocus(side)) => {...state, focused: side}
+  | PanelAction(side, action) =>
     Lens.over(
       getLensBySide(side),
-      panel => {
-        let nextFiles =
-          FsUtils.getFilesList(Node_path.resolve(panel.path, relativePath));
-        let nextFocusedItemIndex =
-          switch relativePath {
-          | ".." =>
-            let currentDirectoryName = Node_path.basename(panel.path);
-            let idx =
-              RList.findIndex(
-                info => info.name === currentDirectoryName,
-                nextFiles
-              );
-            Option.default(0, idx);
-          | _ => 0
-          };
-        {
-          ...panel,
-          path: Node_path.resolve(panel.path, relativePath),
-          files: nextFiles,
-          focusedItem: List.nth(nextFiles, nextFocusedItemIndex),
-          selectedFiles: []
-        };
-      },
-      state
-    )
-  | SetPanelFocus(side) => {...state, focused: side}
-  | SetItemFocus(side, info) =>
-    Lens.over(
-      getLensBySide(side),
-      panel => {...panel, focusedItem: info},
-      state
-    )
-  | SetPanelItemsPerColumnCount(side, itemsPerColumn) =>
-    Lens.over(getLensBySide(side), panel => {...panel, itemsPerColumn}, state)
-  | SelectItems(side, toFile) =>
-    Lens.over(
-      getLensBySide(side),
-      panel => {
-        let fromIndex = RList.indexOf(panel.focusedItem, panel.files);
-        let toIndex = RList.indexOf(toFile, panel.files);
-        let indeces =
-          if (fromIndex < toIndex) {
-            (fromIndex, toIndex);
-          } else {
-            (toIndex, fromIndex);
-          };
-        let selectedFiles =
-          switch indeces {
-          | (Some(fromIndex), Some(toIndex)) =>
-            panel.files
-            |> Rationale.RList.slice(fromIndex, toIndex - fromIndex)
-            |> Rationale.RList.concat(panel.selectedFiles)
-          | _ => panel.selectedFiles
-          };
-        {...panel, selectedFiles};
-      },
+      prevState => PanelReducer.reducer(prevState, action),
       state
     )
   | _ => state

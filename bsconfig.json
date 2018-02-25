@@ -5,6 +5,7 @@
   },
   "sources": [
     "src",
+    "src/store",
     "src/ui",
     "src/utils"
   ],
