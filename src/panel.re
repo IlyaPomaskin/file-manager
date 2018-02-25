@@ -2,6 +2,8 @@ open Fs_utils;
 
 open Fs_utils.FileInfo;
 
+open State;
+
 type action =
   | SetColumnWidth(int)
   | SetPanelHeight(int);
@@ -67,6 +69,10 @@ let renderColumnItems = (panelRef, retainedProps, info) =>
     className=(
       Cn.make([
         "panel-item",
+        "panel-item--selected"
+        |> Cn.ifBool(
+             Rationale.RList.contains(info, retainedProps.panel.selectedFiles)
+           ),
         "panel-item--focused"
         |> Cn.ifBool(retainedProps.panel.focusedItem === info),
         "panel-item--active-focused"
@@ -141,7 +147,7 @@ let make =
     };
     self.state;
   },
-  initialState: () => {panelRef: ref(None), columnWidth: 0},
+  initialState: () => {panelRef: ref(None), columnWidth: 100},
   reducer: (action, state) =>
     switch action {
     | SetColumnWidth(width) =>

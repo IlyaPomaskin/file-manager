@@ -1,3 +1,9 @@
+open Rationale;
+
+open Rationale.Option;
+
+open State;
+
 let getItemHeight = () => 24;
 
 let getPanelHeight = node =>
@@ -53,10 +59,41 @@ let getMaxColumnWidth = panelRef =>
     |> List.fold_left(
          (maxWidth, optNode) =>
            switch optNode {
-           | Some(node) => max(maxWidth, ElementRe.clientWidth(node))
+           | Some(n) =>
+             /* Js.log4(
+                  maxWidth,
+                  ElementRe.clientWidth(n),
+                  n,
+                  max(maxWidth, ElementRe.clientWidth(n))
+                ); */
+             max(maxWidth, ElementRe.clientWidth(n))
            | _ => maxWidth
            },
-         0
+         100
        )
-  | _ => 0
+  | _ => 100
   };
+
+let getItemByOffset = (panel: panelType, offsetType: Offset.t) =>
+  panel.files
+  |> RList.indexOf(panel.focusedItem)
+  <$> (
+    focusedItemIndex =>
+      switch offsetType {
+      | Offset.Left => focusedItemIndex - panel.itemsPerColumn
+      | Offset.Right => focusedItemIndex + panel.itemsPerColumn
+      | Offset.Up => focusedItemIndex - 1
+      | Offset.Down => focusedItemIndex + 1
+      }
+  )
+  <$> (
+    targetIndex => {
+      let lastIndex = List.length(panel.files) - 1;
+      if (targetIndex > lastIndex) {
+        min(lastIndex, targetIndex);
+      } else {
+        max(0, targetIndex);
+      };
+    }
+  )
+  >>= (targetIndex => RList.nth(targetIndex, panel.files));

@@ -37,8 +37,7 @@ type actions =
   | SetPanelFocus(PanelSide.t)
   | SetItemFocus(PanelSide.t, FileInfo.t)
   | SetPanelItemsPerColumnCount(PanelSide.t, int)
-  | SelectItem(fileInfo)
-  | SetItemFocusOffset(Offset.t);
+  | SelectItems(PanelSide.t, FileInfo.t);
 
 let leftLens =
   Lens.make(state => state.left, (value, state) => {...state, left: value});
@@ -91,42 +90,27 @@ let appReducer = (state, action) =>
     )
   | SetPanelItemsPerColumnCount(side, itemsPerColumn) =>
     Lens.over(getLensBySide(side), panel => {...panel, itemsPerColumn}, state)
-  | SetItemFocusOffset(offset) =>
+  | SelectItems(side, toFile) =>
     Lens.over(
-      getLensBySide(state.focused),
+      getLensBySide(side),
       panel => {
-        let currentIndex = RList.indexOf(panel.focusedItem, panel.files);
-        let idx = Option.default(0, currentIndex);
-        let idxOffset =
-          switch offset {
-          | Offset.Left => idx - panel.itemsPerColumn
-          | Offset.Right => idx + panel.itemsPerColumn
-          | Offset.Up => idx - 1
-          | Offset.Down => idx + 1
-          };
-        let nextIdx = {
-          let lastIndex = List.length(panel.files) - 1;
-          if (idxOffset > lastIndex) {
-            min(lastIndex, idxOffset);
+        let fromIndex = RList.indexOf(panel.focusedItem, panel.files);
+        let toIndex = RList.indexOf(toFile, panel.files);
+        let indeces =
+          if (fromIndex < toIndex) {
+            (fromIndex, toIndex);
           } else {
-            max(0, idxOffset);
+            (toIndex, fromIndex);
           };
-        };
-        let focusedItem =
-          Option.default(
-            panel.focusedItem,
-            Rationale.RList.nth(nextIdx, panel.files)
-          );
-        {...panel, focusedItem};
-      },
-      state
-    )
-  | SelectItem(info) =>
-    Lens.over(
-      getLensBySide(state.focused),
-      panel => {
-        let nextSelectedFiles = List.append([info], panel.selectedFiles);
-        {...panel, selectedFiles: nextSelectedFiles};
+        let selectedFiles =
+          switch indeces {
+          | (Some(fromIndex), Some(toIndex)) =>
+            panel.files
+            |> Rationale.RList.slice(fromIndex, toIndex - fromIndex)
+            |> Rationale.RList.concat(panel.selectedFiles)
+          | _ => panel.selectedFiles
+          };
+        {...panel, selectedFiles};
       },
       state
     )
