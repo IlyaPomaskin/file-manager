@@ -1,15 +1,15 @@
-open Fs_utils;
+open Types;
 
-open Fs_utils.FileInfo;
+open Types.FileInfo;
 
-open State;
+open Types.PanelType;
 
 type action =
   | SetColumnWidth(int)
   | SetPanelHeight(int);
 
 type retainedProps = {
-  panel: panelType,
+  panel: PanelType.t,
   isFocused: bool,
   onPathChange: FileInfo.t => unit,
   onFocusItem: FileInfo.t => unit,

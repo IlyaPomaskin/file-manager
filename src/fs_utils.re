@@ -1,15 +1,17 @@
-module FileInfo = {
-  type t = {
-    name: string,
-    fullPath: string,
-    isFile: bool
-  };
-  let make = (path, name) : t => {
-    let fullPath = Node_path.resolve(path, name);
-    let stats = NodeFsLocal.statSync(fullPath);
-    {name, fullPath, isFile: NodeFsLocal.Stats.isFile(stats)};
-  };
-  let makeParent = path : t => {name: "..", fullPath: path, isFile: false};
+open Types;
+
+open Types.FileInfo;
+
+let make = (path, name) : FileInfo.t => {
+  let fullPath = Node_path.resolve(path, name);
+  let stats = NodeFsLocal.statSync(fullPath);
+  {name, fullPath, isFile: NodeFsLocal.Stats.isFile(stats)};
+};
+
+let makeParent = path : FileInfo.t => {
+  name: "..",
+  fullPath: path,
+  isFile: false
 };
 
 let getDirPath = (oldPath, newPart) =>
@@ -26,6 +28,6 @@ let sortByTypeAndName = (a: FileInfo.t, b: FileInfo.t) =>
 let getFilesList = path : list(FileInfo.t) =>
   Node_fs.readdirSync(path)
   |> Array.to_list
-  |> List.map(filename => FileInfo.make(path, filename))
-  |> List.append([FileInfo.makeParent(path)])
+  |> List.map(filename => make(path, filename))
+  |> List.append([makeParent(path)])
   |> List.fast_sort(sortByTypeAndName);

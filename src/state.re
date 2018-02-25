@@ -1,35 +1,13 @@
 open Rationale;
 
-open Fs_utils;
+open Types;
 
-open Fs_utils.FileInfo;
-
-type panelType = {
-  focusedItem: FileInfo.t,
-  path: string,
-  files: list(FileInfo.t),
-  itemsPerColumn: int,
-  selectedFiles: list(FileInfo.t)
-};
-
-module Offset = {
-  type t =
-    | Left
-    | Right
-    | Up
-    | Down;
-};
-
-module PanelSide = {
-  type t =
-    | Left
-    | Right;
-};
+open Types.FileInfo;
 
 type appState = {
   focused: PanelSide.t,
-  left: panelType,
-  right: panelType
+  left: PanelType.t,
+  right: PanelType.t
 };
 
 type actions =

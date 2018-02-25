@@ -4,11 +4,11 @@ ReactDOMRe.renderToElementWithId(<App />, "index");
 
 let arrowKeyNameToOffset = keyName =>
   switch keyName {
-  | "ArrowLeft" => State.Offset.Left
-  | "ArrowRight" => State.Offset.Right
-  | "ArrowUp" => State.Offset.Up
-  | "ArrowDown" => State.Offset.Down
-  | _ => State.Offset.Down
+  | "ArrowLeft" => Types.Offset.Left
+  | "ArrowRight" => Types.Offset.Right
+  | "ArrowUp" => Types.Offset.Up
+  | "ArrowDown" => Types.Offset.Down
+  | _ => Types.Offset.Down
   };
 
 let keyPressHandler = event => {
@@ -46,8 +46,8 @@ let keyPressHandler = event => {
   | (_, "Tab") =>
     dispatch(
       SetPanelFocus(
-        state.focused === State.PanelSide.Left ?
-          State.PanelSide.Right : State.PanelSide.Left
+        state.focused === Types.PanelSide.Left ?
+          Types.PanelSide.Right : Types.PanelSide.Left
       )
     )
   | _ => ()

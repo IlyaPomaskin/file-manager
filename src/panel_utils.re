@@ -4,6 +4,8 @@ open Rationale.Option;
 
 open State;
 
+open Types;
+
 let getItemHeight = () => 24;
 
 let getPanelHeight = node =>
@@ -74,7 +76,7 @@ let getMaxColumnWidth = panelRef =>
   | _ => 100
   };
 
-let getItemByOffset = (panel: panelType, offsetType: Offset.t) =>
+let getItemByOffset = (panel: PanelType.t, offsetType: Offset.t) =>
   panel.files
   |> RList.indexOf(panel.focusedItem)
   <$> (
