@@ -1,5 +1,7 @@
 open Fs_utils;
 
+open Fs_utils.FileInfo;
+
 type action =
   | SetColumnWidth(int)
   | SetPanelHeight(int);

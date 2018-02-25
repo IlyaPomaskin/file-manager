@@ -2,12 +2,14 @@ open Rationale;
 
 open Fs_utils;
 
+open Fs_utils.FileInfo;
+
 type panelType = {
-  focusedItem: fileInfo,
+  focusedItem: FileInfo.t,
   path: string,
-  files: list(fileInfo),
+  files: list(FileInfo.t),
   itemsPerColumn: int,
-  selectedFiles: list(fileInfo)
+  selectedFiles: list(FileInfo.t)
 };
 
 module Offset = {
@@ -33,7 +35,7 @@ type appState = {
 type actions =
   | SetPath(PanelSide.t, string)
   | SetPanelFocus(PanelSide.t)
-  | SetItemFocus(PanelSide.t, fileInfo)
+  | SetItemFocus(PanelSide.t, FileInfo.t)
   | SetPanelItemsPerColumnCount(PanelSide.t, int)
   | SelectItem(fileInfo)
   | SetItemFocusOffset(Offset.t);

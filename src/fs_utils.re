@@ -1,34 +1,31 @@
-type fileInfo = {
-  name: string,
-  fullPath: string,
-  isFile: bool
+module FileInfo = {
+  type t = {
+    name: string,
+    fullPath: string,
+    isFile: bool
+  };
+  let make = (path, name) : t => {
+    let fullPath = Node_path.resolve(path, name);
+    let stats = NodeFsLocal.statSync(fullPath);
+    {name, fullPath, isFile: NodeFsLocal.Stats.isFile(stats)};
+  };
+  let makeParent = path : t => {name: "..", fullPath: path, isFile: false};
 };
 
 let getDirPath = (oldPath, newPart) =>
   Node_path.normalize(oldPath ++ Node_path.sep ++ newPart);
 
-let makeFileInfo = (path, name) : fileInfo => {
-  let fullPath = Node_path.resolve(path, name);
-  let stats = NodeFsLocal.statSync(fullPath);
-  {name, fullPath, isFile: NodeFsLocal.Stats.isFile(stats)};
-};
-
-let sortByTypeAndName = (a: fileInfo, b: fileInfo) =>
-  if (a.isFile === b.isFile) {
-    String.compare(a.name, b.name);
-  } else {
-    switch (a, b) {
-    | ({isFile: false}, {isFile: true}) => (-1)
-    | ({isFile: true}, {isFile: false}) => 1
-    | _ => 0
-    };
+let sortByTypeAndName = (a: FileInfo.t, b: FileInfo.t) =>
+  switch (a.isFile, b.isFile) {
+  | (false, false)
+  | (true, true) => String.compare(a.name, b.name)
+  | (false, true) => (-1)
+  | (true, false) => 1
   };
 
-let getFilesList = path => {
-  let files: array(fileInfo) =
-    Node_fs.readdirSync(path)
-    |> Array.map(filename => makeFileInfo(path, filename))
-    |> Array.append([|{name: "..", fullPath: path, isFile: false}|]);
-  Array.fast_sort(sortByTypeAndName, files);
-  Array.to_list(files);
-};
+let getFilesList = path : list(FileInfo.t) =>
+  Node_fs.readdirSync(path)
+  |> Array.to_list
+  |> List.map(filename => FileInfo.make(path, filename))
+  |> List.append([FileInfo.makeParent(path)])
+  |> List.fast_sort(sortByTypeAndName);
