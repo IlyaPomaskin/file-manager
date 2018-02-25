@@ -7,13 +7,11 @@ type action =
   | SetPanelHeight(int);
 
 type retainedProps = {
-  onPathChange: fileInfo => unit,
-  onFocusItem: fileInfo => unit,
-  onItemsPerColumnChange: int => unit,
-  focusedItem: fileInfo,
-  path: string,
-  files: list(fileInfo),
-  isFocused: bool
+  panel: panelType,
+  isFocused: bool,
+  onPathChange: FileInfo.t => unit,
+  onFocusItem: FileInfo.t => unit,
+  onItemsPerColumnChange: int => unit
 };
 
 type state = {
@@ -69,10 +67,12 @@ let renderColumnItems = (panelRef, retainedProps, info) =>
     className=(
       Cn.make([
         "panel-item",
-        "panel-item--focused" |> Cn.ifBool(retainedProps.focusedItem === info),
+        "panel-item--focused"
+        |> Cn.ifBool(retainedProps.panel.focusedItem === info),
         "panel-item--active-focused"
         |> Cn.ifBool(
-             retainedProps.focusedItem === info && retainedProps.isFocused
+             retainedProps.panel.focusedItem === info
+             && retainedProps.isFocused
            ),
         "u-color-brand-lighter" |> Cn.ifBool(info.isFile),
         "u-color-brand-darker" |> Cn.ifBool(! info.isFile)
@@ -80,7 +80,8 @@ let renderColumnItems = (panelRef, retainedProps, info) =>
     )
     ref=(
       Panel_utils.scrollToNode(
-        retainedProps.isFocused && retainedProps.focusedItem.name === info.name,
+        retainedProps.isFocused
+        && retainedProps.panel.focusedItem.name === info.name,
         panelRef
       )
     )
@@ -94,26 +95,21 @@ let component = ReasonReact.reducerComponentWithRetainedProps("Panel");
 
 let make =
     (
+      ~panel,
       ~isFocused,
-      ~focusedItem,
       ~onFocusItem,
       ~onPathChange,
       ~onClick,
       ~onItemsPerColumnChange,
-      ~path,
-      ~files,
-      ~itemsPerColumn,
       _children
     ) => {
   ...component,
   retainedProps: {
+    panel,
+    isFocused,
     onFocusItem,
     onPathChange,
-    onItemsPerColumnChange,
-    focusedItem,
-    path,
-    files,
-    isFocused
+    onItemsPerColumnChange
   },
   subscriptions: self => [
     Sub(
@@ -139,7 +135,7 @@ let make =
     ReasonReact.NoUpdate;
   },
   willReceiveProps: self => {
-    if (self.retainedProps.files !== files) {
+    if (self.retainedProps.panel.files !== panel.files) {
       updatePanelHeight(self);
       updateColumnsWidth(self);
     };
@@ -158,8 +154,8 @@ let make =
       ref=(self.handle(setPanelRef))
       onClick>
       (
-        files
-        |> Rationale.RList.splitEvery(itemsPerColumn)
+        panel.files
+        |> Rationale.RList.splitEvery(panel.itemsPerColumn)
         |> List.mapi(
              renderColumn(
                self.state.columnWidth,

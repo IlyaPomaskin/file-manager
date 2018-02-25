@@ -20,11 +20,8 @@ let renderPanel = (~side, ~state, ~dispatch) => {
       tabIndex=(-1)
     />
     <Panel
+      panel
       isFocused=(state.focused === side)
-      path=panel.path
-      files=panel.files
-      focusedItem=panel.focusedItem
-      itemsPerColumn=panel.itemsPerColumn
       onFocusItem=(info => dispatch(SetItemFocus(side, info)))
       onPathChange=(info => dispatch(SetPath(side, info.name)))
       onClick=(_e => dispatch(SetPanelFocus(side)))
