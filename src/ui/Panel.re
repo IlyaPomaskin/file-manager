@@ -38,7 +38,7 @@ let updatePanelHeight = self =>
 
 let updateColumnsWidth = self =>
   self.ReasonReact.send(
-    SetPanelHeight(
+    SetColumnWidth(
       PanelUtils.getMaxColumnWidth(self.ReasonReact.state.panelRef^)
     )
   );
@@ -53,7 +53,10 @@ let renderColumn = (columnWidth, renderItem, index, columnItems) =>
     key=(string_of_int(index))
     className="panel-column"
     style=(
-      ReactDOMRe.Style.make(~width=string_of_int(columnWidth) ++ "px", ())
+      ReactDOMRe.Style.make(
+        ~width=columnWidth === 0 ? "auto" : string_of_int(columnWidth) ++ "px",
+        ()
+      )
     )>
     (
       columnItems
@@ -137,17 +140,20 @@ let make =
   ],
   didMount: self => {
     updatePanelHeight(self);
-    updateColumnsWidth(self);
     ReasonReact.NoUpdate;
   },
-  willReceiveProps: self => {
+  willReceiveProps: self =>
     if (self.retainedProps.panel.files !== panel.files) {
       updatePanelHeight(self);
-      updateColumnsWidth(self);
-    };
-    self.state;
-  },
-  initialState: () => {panelRef: ref(None), columnWidth: 100},
+      {...self.state, columnWidth: 0};
+    } else {
+      self.state;
+    },
+  didUpdate: ({oldSelf, newSelf}) =>
+    if (oldSelf.retainedProps.panel.files !== newSelf.retainedProps.panel.files) {
+      updateColumnsWidth(newSelf);
+    },
+  initialState: () => {panelRef: ref(None), columnWidth: 0},
   reducer: (action, state) =>
     switch action {
     | SetColumnWidth(width) =>

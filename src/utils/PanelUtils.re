@@ -48,31 +48,16 @@ let scrollToNode = (shouldScroll, panelRef, node) => {
 };
 
 let getMaxColumnWidth = panelRef =>
-  switch panelRef {
-  | Some(node) =>
-    node
-    |> ElementRe.querySelectorAll(".panel-column")
-    |> NodeListRe.toArray
-    |> Array.to_list
-    |> List.map(ElementRe.ofNode)
-    |> List.filter(Rationale.Option.isSome)
-    |> List.fold_left(
-         (maxWidth, optNode) =>
-           switch optNode {
-           | Some(n) =>
-             /* Js.log4(
-                  maxWidth,
-                  ElementRe.clientWidth(n),
-                  n,
-                  max(maxWidth, ElementRe.clientWidth(n))
-                ); */
-             max(maxWidth, ElementRe.clientWidth(n))
-           | _ => maxWidth
-           },
-         100
-       )
-  | _ => 100
-  };
+  panelRef
+  <$> ElementRe.querySelectorAll(".panel-column")
+  <$> NodeListRe.toArray
+  <$> Array.to_list
+  <$> List.map(node =>
+        node |> ElementRe.ofNode <$> ElementRe.clientWidth |> Option.default(0)
+      )
+  <$> List.fold_left(max, 0)
+  <$> (maxWidth => maxWidth + 5)
+  |> Option.default(120);
 
 let getItemByOffset = (panel: PanelType.t, offsetType: Offset.t) =>
   panel.files

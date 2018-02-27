@@ -9,7 +9,7 @@ open RootActions;
 let renderPanel = (~side, ~state, ~rootDispatch, ~panelDispatch) => {
   let panel = Lens.view(Store.getLensBySide(side), state);
   <div className="o-grid__cell grid">
-    <input className="path" value=panel.path tabIndex=(-1) />
+    <input className="path" value=panel.path tabIndex=(-1) readOnly=Js.true_ />
     <Panel
       panel
       isFocused=(state.focused === side)
