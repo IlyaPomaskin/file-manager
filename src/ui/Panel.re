@@ -48,57 +48,73 @@ let resizeEventListener = (_evt, self) => updatePanelHeight(self);
 let setPanelRef = (node, self) =>
   self.ReasonReact.state.panelRef := Js.Nullable.to_opt(node);
 
-let renderColumn = (columnWidth, renderItem, columnItems) =>
-  <div
-    key=List.nth(columnItems, 0).name
-    className="panel-column"
-    style=(
-      ReactDOMRe.Style.make(
-        ~width=columnWidth === 0 ? "auto" : string_of_int(columnWidth) ++ "px",
-        ()
-      )
-    )>
-    (
-      columnItems
-      |> List.map(renderItem)
-      |> Array.of_list
-      |> ReasonReact.arrayToElement
-    )
-  </div>;
+module ColumnItem = {
+  let component = ReasonReact.statelessComponent("ColumnItem");
+  let make = (~panelRef, ~retainedProps, ~info, _children) => {
+    ...component,
+    render: _self =>
+      <div
+        className=(
+          Cn.make([
+            "panel-item",
+            "panel-item--selected"
+            |> Cn.ifBool(
+                 Rationale.RList.contains(
+                   info,
+                   retainedProps.panel.selectedFiles
+                 )
+               ),
+            "panel-item--focused"
+            |> Cn.ifBool(retainedProps.panel.focusedItem === info),
+            "panel-item--active-focused"
+            |> Cn.ifBool(
+                 retainedProps.panel.focusedItem === info
+                 && retainedProps.isFocused
+               ),
+            "u-color-brand-lighter" |> Cn.ifBool(info.isFile),
+            "u-color-brand-darker" |> Cn.ifBool(! info.isFile)
+          ])
+        )
+        ref=(
+          PanelUtils.scrollToNode(
+            retainedProps.isFocused
+            && retainedProps.panel.focusedItem.name === info.name,
+            panelRef
+          )
+        )
+        onDoubleClick=(_e => retainedProps.onPathChange(info))
+        onClick=(_e => retainedProps.onFocusItem(info))>
+        (ReasonReact.stringToElement(info.isFile ? fileImage : folderImage))
+        (ReasonReact.stringToElement(info.name))
+      </div>
+  };
+};
 
-let renderColumnItems = (panelRef, retainedProps, info) =>
-  <div
-    key=info.name
-    className=(
-      Cn.make([
-        "panel-item",
-        "panel-item--selected"
-        |> Cn.ifBool(
-             Rationale.RList.contains(info, retainedProps.panel.selectedFiles)
-           ),
-        "panel-item--focused"
-        |> Cn.ifBool(retainedProps.panel.focusedItem === info),
-        "panel-item--active-focused"
-        |> Cn.ifBool(
-             retainedProps.panel.focusedItem === info
-             && retainedProps.isFocused
-           ),
-        "u-color-brand-lighter" |> Cn.ifBool(info.isFile),
-        "u-color-brand-darker" |> Cn.ifBool(! info.isFile)
-      ])
-    )
-    ref=(
-      PanelUtils.scrollToNode(
-        retainedProps.isFocused
-        && retainedProps.panel.focusedItem.name === info.name,
-        panelRef
-      )
-    )
-    onDoubleClick=(_e => retainedProps.onPathChange(info))
-    onClick=(_e => retainedProps.onFocusItem(info))>
-    (ReasonReact.stringToElement(info.isFile ? fileImage : folderImage))
-    (ReasonReact.stringToElement(info.name))
-  </div>;
+module Column = {
+  let component = ReasonReact.statelessComponent("Column");
+  let make = (~columnWidth, ~columnItems, ~panelRef, ~retainedProps, _children) => {
+    ...component,
+    render: _self =>
+      <div
+        className="panel-column"
+        style=(
+          ReactDOMRe.Style.make(
+            ~width=
+              columnWidth === 0 ? "auto" : string_of_int(columnWidth) ++ "px",
+            ()
+          )
+        )>
+        (
+          columnItems
+          |> List.map(info =>
+               <ColumnItem key=info.name panelRef retainedProps info />
+             )
+          |> Array.of_list
+          |> ReasonReact.arrayToElement
+        )
+      </div>
+  };
+};
 
 let component = ReasonReact.reducerComponentWithRetainedProps("Panel");
 
@@ -168,11 +184,14 @@ let make =
       (
         panel.files
         |> Rationale.RList.splitEvery(panel.itemsPerColumn)
-        |> List.map(
-             renderColumn(
-               self.state.columnWidth,
-               renderColumnItems(self.state.panelRef^, self.retainedProps)
-             )
+        |> List.map(columnItems =>
+             <Column
+               key=List.nth(columnItems, 0).name
+               columnWidth=self.state.columnWidth
+               columnItems
+               panelRef=self.state.panelRef^
+               retainedProps=self.retainedProps
+             />
            )
         |> Array.of_list
         |> ReasonReact.arrayToElement
