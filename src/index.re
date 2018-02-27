@@ -27,8 +27,8 @@ let keyPressHandler = event => {
     |> PanelUtils.getItemByOffset(panel)
     <$> (
       item => {
-        dispatch(PanelAction(state.focused, SelectItems(item)));
-        dispatch(PanelAction(state.focused, SetItemFocus(item)));
+        dispatch(PanelActions(state.focused, SelectItems(item)));
+        dispatch(PanelActions(state.focused, SetItemFocus(item)));
       }
     )
     |> ignore
@@ -39,14 +39,14 @@ let keyPressHandler = event => {
     keyName
     |> arrowKeyNameToOffset
     |> PanelUtils.getItemByOffset(panel)
-    <$> (item => dispatch(PanelAction(state.focused, SetItemFocus(item))))
+    <$> (item => dispatch(PanelActions(state.focused, SetItemFocus(item))))
     |> ignore
   | (_, "Enter") =>
-    dispatch(PanelAction(state.focused, SetPath(panel.focusedItem.name)))
-  | (_, "Backspace") => dispatch(PanelAction(state.focused, SetPath("..")))
+    dispatch(PanelActions(state.focused, SetPath(panel.focusedItem.name)))
+  | (_, "Backspace") => dispatch(PanelActions(state.focused, SetPath("..")))
   | (_, "Tab") =>
     dispatch(
-      RootAction(
+      RootActions(
         SetPanelFocus(
           state.focused === Types.PanelSide.Left ?
             Types.PanelSide.Right : Types.PanelSide.Left

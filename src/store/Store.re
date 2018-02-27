@@ -2,17 +2,6 @@ open Rationale;
 
 open Types;
 
-module Action = {
-  type t =
-    | SetPanelFocus(PanelSide.t);
-};
-
-module Actions = {
-  type t =
-    | PanelAction(PanelSide.t, PanelReducer.Action.t)
-    | RootAction(Action.t);
-};
-
 type appState = {
   focused: PanelSide.t,
   left: PanelType.t,
@@ -31,16 +20,15 @@ let getLensBySide = side =>
   | PanelSide.Right => rightLens
   };
 
-let appReducer = (state, action: Actions.t) =>
+let appReducer = (state, action: AppActions.t) =>
   switch action {
-  | RootAction(SetPanelFocus(side)) => {...state, focused: side}
-  | PanelAction(side, action) =>
+  | RootActions(SetPanelFocus(side)) => {...state, focused: side}
+  | PanelActions(side, action) =>
     Lens.over(
       getLensBySide(side),
       prevState => PanelReducer.reducer(prevState, action),
       state
     )
-  | _ => state
   };
 
 let store =

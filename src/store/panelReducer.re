@@ -4,15 +4,7 @@ open Types;
 
 open Types.FileInfo;
 
-module Action = {
-  type t =
-    | SetPath(string)
-    | SetItemFocus(FileInfo.t)
-    | SetPanelItemsPerColumnCount(int)
-    | SelectItems(FileInfo.t);
-};
-
-let reducer = (panel: PanelType.t, action: Action.t) =>
+let reducer = (panel: PanelType.t, action: PanelActions.t) =>
   switch action {
   | SetPath(relativePath) =>
     let nextFiles =

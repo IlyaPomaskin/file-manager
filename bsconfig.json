@@ -6,6 +6,7 @@
   "sources": [
     "src",
     "src/store",
+    "src/store/actions",
     "src/ui",
     "src/utils"
   ],
