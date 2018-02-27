@@ -48,9 +48,9 @@ let resizeEventListener = (_evt, self) => updatePanelHeight(self);
 let setPanelRef = (node, self) =>
   self.ReasonReact.state.panelRef := Js.Nullable.to_opt(node);
 
-let renderColumn = (columnWidth, renderItem, index, columnItems) =>
+let renderColumn = (columnWidth, renderItem, columnItems) =>
   <div
-    key=(string_of_int(index))
+    key=List.nth(columnItems, 0).name
     className="panel-column"
     style=(
       ReactDOMRe.Style.make(
@@ -168,7 +168,7 @@ let make =
       (
         panel.files
         |> Rationale.RList.splitEvery(panel.itemsPerColumn)
-        |> List.mapi(
+        |> List.map(
              renderColumn(
                self.state.columnWidth,
                renderColumnItems(self.state.panelRef^, self.retainedProps)
