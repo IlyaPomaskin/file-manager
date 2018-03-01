@@ -29,5 +29,11 @@ let getFilesList = path : list(FileInfo.t) =>
   Node_fs.readdirSync(path)
   |> Array.to_list
   |> List.map(filename => make(path, filename))
-  |> List.append([makeParent(path)])
+  |> (
+    list =>
+      switch path {
+      | "/" => list
+      | _ => List.append([makeParent(path)], list)
+      }
+  )
   |> List.fast_sort(sortByTypeAndName);
