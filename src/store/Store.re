@@ -37,7 +37,7 @@ let store =
     ~preloadedState={
       focused: PanelSide.Left,
       left: {
-        let path = ".";
+        let path = NodeFsLocal.homedir();
         let files = FsUtils.getFilesList(path);
         {
           focusedItem: List.nth(files, 0),
@@ -48,7 +48,7 @@ let store =
         };
       },
       right: {
-        let path = ".";
+        let path = NodeFsLocal.homedir();
         let files = FsUtils.getFilesList(path);
         {
           focusedItem: List.nth(files, 0),

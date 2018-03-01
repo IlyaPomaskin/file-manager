@@ -27,3 +27,5 @@ module Stats = {
 };
 
 [@bs.val] [@bs.module "fs"] external statSync : string => Stats.t = "statSync";
+
+[@bs.val] [@bs.module "os"] external homedir : unit => string = "homedir";
