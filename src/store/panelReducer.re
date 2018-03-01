@@ -43,7 +43,7 @@ let reducer = (panel: PanelType.t, action: PanelActions.t) =>
       switch indeces {
       | (Some(fromIndex), Some(toIndex)) =>
         panel.files
-        |> Rationale.RList.slice(fromIndex, toIndex - fromIndex)
+        |> Rationale.RList.slice(fromIndex, toIndex - fromIndex + 1)
         |> Rationale.RList.concat(panel.selectedFiles)
       | _ => panel.selectedFiles
       };
