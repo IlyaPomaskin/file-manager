@@ -26,6 +26,12 @@ module Stats = {
   [@bs.send] external isSocket : t => bool = "isSocket";
 };
 
+/* TODO use fs.variables.COPYFILE_EXCL */
+let copyfile_excl = 1;
+
 [@bs.val] [@bs.module "fs"] external statSync : string => Stats.t = "statSync";
+
+[@bs.val] [@bs.module "fs"]
+external copyFileSync : (string, string, int) => unit = "copyFileSync";
 
 [@bs.val] [@bs.module "os"] external homedir : unit => string = "homedir";

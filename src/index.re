@@ -1,5 +1,9 @@
 open Rationale.Option;
 
+open Types;
+
+open Types.FileInfo;
+
 ReactDOMRe.renderToElementWithId(<App />, "index");
 
 let arrowKeyNameToOffset = keyName =>
@@ -53,6 +57,22 @@ let keyPressHandler = event => {
         )
       )
     )
+  | (_, "F5") =>
+    let srcFiles =
+      switch panel {
+      | {selectedFiles: []} => [panel.focusedItem.fullPath]
+      | {focusedItem: {name: ".."}} => []
+      | _ => List.map(info => info.fullPath, panel.selectedFiles)
+      };
+    let dstSide =
+      switch state.focused {
+      | PanelSide.Left => PanelSide.Right
+      | PanelSide.Right => PanelSide.Left
+      };
+    let dstPanel = Rationale.Lens.view(Store.getLensBySide(dstSide), state);
+    let dst = dstPanel.path;
+    dispatch(RootActions(CopyFiles(srcFiles, dst)));
+    dispatch(PanelActions(dstSide, SetPath(dst)));
   | _ => ()
   };
 };

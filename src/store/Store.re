@@ -23,6 +23,15 @@ let getLensBySide = side =>
 let appReducer = (state, action: AppActions.t) =>
   switch action {
   | RootActions(SetPanelFocus(side)) => {...state, focused: side}
+  | RootActions(CopyFiles(files, dst)) =>
+    List.iter(
+      path => {
+        let dstFileName = Node_path.resolve(dst, Node_path.basename(path));
+        NodeFsLocal.copyFileSync(path, dstFileName, 0);
+      },
+      files
+    );
+    state;
   | PanelActions(side, action) =>
     Lens.over(
       getLensBySide(side),
