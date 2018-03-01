@@ -44,6 +44,7 @@ let reducer = (panel: PanelType.t, action: PanelActions.t) =>
       | (Some(fromIndex), Some(toIndex)) =>
         panel.files
         |> Rationale.RList.slice(fromIndex, toIndex - fromIndex + 1)
+        |> Rationale.RList.reject(info => info.name === "..")
         |> Rationale.RList.concat(panel.selectedFiles)
       | _ => panel.selectedFiles
       };
