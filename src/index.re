@@ -58,6 +58,8 @@ let keyPressHandler = event => {
       )
     )
   | (_, "F5") =>
+  | (_, "F5")
+  | (_, "F6") =>
     let srcFiles =
       switch panel {
       | {selectedFiles: []} => [panel.focusedItem.fullPath]
@@ -71,7 +73,11 @@ let keyPressHandler = event => {
       };
     let dstPanel = Rationale.Lens.view(Store.getLensBySide(dstSide), state);
     let dst = dstPanel.path;
-    dispatch(RootActions(CopyFiles(srcFiles, dst)));
+    switch keyName {
+    | "F5" => dispatch(RootActions(CopyFiles(srcFiles, dst)))
+    | "F6" => dispatch(RootActions(MoveFiles(srcFiles, dst)))
+    | _ => ()
+    };
     dispatch(PanelActions(dstSide, SetPath(dst)));
   | _ => ()
   };

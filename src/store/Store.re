@@ -32,6 +32,15 @@ let appReducer = (state, action: AppActions.t) =>
       files
     );
     state;
+  | RootActions(MoveFiles(files, dst)) =>
+    List.iter(
+      path => {
+        let dstFileName = Node_path.resolve(dst, Node_path.basename(path));
+        NodeFsLocal.moveFileSync(path, dstFileName, 0);
+      },
+      files
+    );
+    state;
   | PanelActions(side, action) =>
     Lens.over(
       getLensBySide(side),

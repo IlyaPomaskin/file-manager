@@ -34,4 +34,7 @@ let copyfile_excl = 1;
 [@bs.val] [@bs.module "fs"]
 external copyFileSync : (string, string, int) => unit = "copyFileSync";
 
+[@bs.val] [@bs.module "fs"]
+external moveFileSync : (string, string, int) => unit = "moveFileSync";
+
 [@bs.val] [@bs.module "os"] external homedir : unit => string = "homedir";
