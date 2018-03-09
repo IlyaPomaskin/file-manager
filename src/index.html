@@ -51,10 +51,15 @@
       box-sizing: border-box;
       flex-shrink: 1;
       min-width: 120px;
-      padding: 0 5px;
       user-select: none;
       text-overflow: ellipsis;
-      overflow-x: auto;
+      overflow-x: hidden;
+    }
+
+    .panel-item__icon {
+      display: inline-block;
+      width: 20px;
+      margin: 0 3px;
     }
 
     .panel-item--focused {

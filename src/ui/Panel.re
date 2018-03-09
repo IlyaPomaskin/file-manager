@@ -84,7 +84,9 @@ module ColumnItem = {
         )
         onDoubleClick=(_e => retainedProps.onPathChange(info))
         onClick=(_e => retainedProps.onFocusItem(info))>
-        (ReasonReact.stringToElement(info.isFile ? fileImage : folderImage))
+        <div className="panel-item__icon">
+          (ReasonReact.stringToElement(info.isFile ? fileImage : folderImage))
+        </div>
         (ReasonReact.stringToElement(info.name))
       </div>
   };
