@@ -46,7 +46,7 @@ let updateColumnsWidth = self =>
 let resizeEventListener = (_evt, self) => updatePanelHeight(self);
 
 let setPanelRef = (node, self) =>
-  self.ReasonReact.state.panelRef := Js.Nullable.to_opt(node);
+  self.ReasonReact.state.panelRef := Js.Nullable.toOption(node);
 
 module ColumnItem = {
   let component = ReasonReact.statelessComponent("ColumnItem");
